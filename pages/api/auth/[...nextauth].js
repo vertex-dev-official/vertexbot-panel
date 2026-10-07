@@ -1,9 +1,8 @@
-// Selon comment le bundler de Vercel/Next interprete le package next-auth (module ESM ou CJS),
-// l'export utile se trouve tantot sur .default, tantot directement sur l'objet require() -
-// on gere les deux cas pour eviter un module.exports vide qui ferait planter toutes les routes
-// d'authentification ("Page /api/auth/[...nextauth] does not export a default function").
-const nextAuthModule = require("next-auth");
-const NextAuth = nextAuthModule.default || nextAuthModule;
-const { authOptions } = require("../../../lib/authOptions");
+// Syntaxe ESM native (import/export) plutot que require()/module.exports : Next.js gere
+// l'interop CommonJS/ESM automatiquement et sans ambiguite pour ce style, ce qui evite les
+// echecs ("Page /api/auth/[...nextauth] does not export a default function") observes avec
+// require("next-auth").default selon la forme exacte du package embarquee par le bundler.
+import NextAuth from "next-auth";
+import { authOptions } from "../../../lib/authOptions";
 
-module.exports = NextAuth(authOptions);
+export default NextAuth(authOptions);
