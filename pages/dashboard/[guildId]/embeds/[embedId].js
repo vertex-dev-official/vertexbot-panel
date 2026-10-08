@@ -1,12 +1,13 @@
-const { getServerSession } = require("next-auth/next");
-const { useState, useEffect, useCallback } = require("react");
-const { useRouter } = require("next/router");
-const nextLinkModule = require("next/link");
-const Link = nextLinkModule.default || nextLinkModule;
-const { authOptions } = require("../../../../lib/authOptions");
-const { fetchManageableGuilds } = require("../../../../lib/discord");
-const { prisma } = require("../../../../lib/prisma");
-const EmbedPreview = require("../../../../components/EmbedPreview");
+// Syntaxe ESM native : voir le commentaire dans dashboard/[guildId]/index.js pour la raison
+// (getServerSideProps doit etre un export nomme reel du module en production sur Vercel).
+import { getServerSession } from "next-auth/next";
+import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/router";
+import Link from "next/link";
+import { authOptions } from "../../../../lib/authOptions";
+import { fetchManageableGuilds } from "../../../../lib/discord";
+import { prisma } from "../../../../lib/prisma";
+import EmbedPreview from "../../../../components/EmbedPreview";
 
 const EMPTY_EMBED = {
   name: "",
@@ -28,7 +29,7 @@ const EMPTY_EMBED = {
   lastSentMessageId: null,
 };
 
-async function getServerSideProps(context) {
+export async function getServerSideProps(context) {
   const session = await getServerSession(context.req, context.res, authOptions);
   if (!session) return { redirect: { destination: "/", permanent: false } };
 
@@ -49,7 +50,7 @@ async function getServerSideProps(context) {
   return { props: { guildId, embedId, initialEmbed: JSON.parse(JSON.stringify(embed)) } };
 }
 
-function EmbedBuilderPage({ guildId, embedId, initialEmbed }) {
+export default function EmbedBuilderPage({ guildId, embedId, initialEmbed }) {
   const router = useRouter();
   const [embed, setEmbed] = useState(initialEmbed || EMPTY_EMBED);
   const [saving, setSaving] = useState(false);
@@ -156,8 +157,11 @@ function EmbedBuilderPage({ guildId, embedId, initialEmbed }) {
       return;
     }
     const saved = await save();
-    const targetId = saved?.id || embedId;
-    if (!targetId) return;
+    // save() renvoie null si la sauvegarde a echoue (erreur de validation ou de reseau) - on doit
+    // s'arreter ici dans ce cas, sinon on publierait l'ancienne version non modifiee depuis la base
+    // au lieu des changements que l'utilisateur vient de faire dans le formulaire.
+    if (!saved) return;
+    const targetId = saved.id;
 
     setPublishing(true);
     try {
@@ -354,5 +358,4 @@ function EmbedBuilderPage({ guildId, embedId, initialEmbed }) {
   );
 }
 
-module.exports = EmbedBuilderPage;
-module.exports.getServerSideProps = getServerSideProps;
+

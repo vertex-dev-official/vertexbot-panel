@@ -1,11 +1,15 @@
-const { getServerSession } = require("next-auth/next");
-const nextLinkModule = require("next/link");
-const Link = nextLinkModule.default || nextLinkModule;
-const { authOptions } = require("../../lib/authOptions");
-const { fetchManageableGuilds } = require("../../lib/discord");
-const { prisma } = require("../../lib/prisma");
+// Syntaxe ESM native (import/export) : Next.js exige que getServerSideProps soit un export
+// nomme reel du module, pas une propriete accrochee apres coup sur la fonction du composant
+// (module.exports = X; module.exports.getServerSideProps = Y;) - ce dernier pattern provoque
+// "getServerSideProps can not be attached to a page's component and must be exported from the
+// page" au build Vercel, meme s'il fonctionne parfois en dev local.
+import { getServerSession } from "next-auth/next";
+import Link from "next/link";
+import { authOptions } from "../../lib/authOptions";
+import { fetchManageableGuilds } from "../../lib/discord";
+import { prisma } from "../../lib/prisma";
 
-async function getServerSideProps(context) {
+export async function getServerSideProps(context) {
   const session = await getServerSession(context.req, context.res, authOptions);
   if (!session) return { redirect: { destination: "/", permanent: false } };
 
@@ -18,7 +22,7 @@ async function getServerSideProps(context) {
   return { props: { guilds: enriched } };
 }
 
-function Dashboard({ guilds }) {
+export default function Dashboard({ guilds }) {
   const inviteUrl = process.env.NEXT_PUBLIC_BOT_INVITE_URL || "#";
 
   return (
@@ -55,6 +59,3 @@ function Dashboard({ guilds }) {
     </main>
   );
 }
-
-module.exports = Dashboard;
-module.exports.getServerSideProps = getServerSideProps;

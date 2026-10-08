@@ -1,12 +1,15 @@
-const { getServerSession } = require("next-auth/next");
-const { useState } = require("react");
-const nextLinkModule = require("next/link");
-const Link = nextLinkModule.default || nextLinkModule;
-const { authOptions } = require("../../../lib/authOptions");
-const { fetchManageableGuilds } = require("../../../lib/discord");
-const { prisma } = require("../../../lib/prisma");
+// Syntaxe ESM native : getServerSideProps doit etre un export nomme reel du module, pas une
+// propriete accrochee apres coup sur la fonction du composant, sous peine de voir Next.js
+// refuser la page en production avec "getServerSideProps can not be attached to a page's
+// component and must be exported from the page".
+import { getServerSession } from "next-auth/next";
+import { useState } from "react";
+import Link from "next/link";
+import { authOptions } from "../../../lib/authOptions";
+import { fetchManageableGuilds } from "../../../lib/discord";
+import { prisma } from "../../../lib/prisma";
 
-async function getServerSideProps(context) {
+export async function getServerSideProps(context) {
   const session = await getServerSession(context.req, context.res, authOptions);
   if (!session) return { redirect: { destination: "/", permanent: false } };
 
@@ -31,7 +34,7 @@ const MODULES = [
   { key: "aiEnabled", label: "IA (/ask)" },
 ];
 
-function ConfigPage({ guild: initialGuild }) {
+export default function ConfigPage({ guild: initialGuild }) {
   const [guild, setGuild] = useState(initialGuild);
   const [saving, setSaving] = useState(false);
   const [savedAt, setSavedAt] = useState(null);
@@ -326,5 +329,4 @@ function BotProfileSection({ guildId, guild, set }) {
   );
 }
 
-module.exports = ConfigPage;
-module.exports.getServerSideProps = getServerSideProps;
+

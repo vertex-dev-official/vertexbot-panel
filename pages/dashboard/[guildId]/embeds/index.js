@@ -1,13 +1,14 @@
-const { getServerSession } = require("next-auth/next");
-const { useState } = require("react");
-const nextLinkModule = require("next/link");
-const Link = nextLinkModule.default || nextLinkModule;
-const { authOptions } = require("../../../../lib/authOptions");
-const { fetchManageableGuilds } = require("../../../../lib/discord");
-const { prisma } = require("../../../../lib/prisma");
-const EmbedPreview = require("../../../../components/EmbedPreview");
+// Syntaxe ESM native : voir le commentaire dans dashboard/[guildId]/index.js pour la raison
+// (getServerSideProps doit etre un export nomme reel du module en production sur Vercel).
+import { getServerSession } from "next-auth/next";
+import { useState } from "react";
+import Link from "next/link";
+import { authOptions } from "../../../../lib/authOptions";
+import { fetchManageableGuilds } from "../../../../lib/discord";
+import { prisma } from "../../../../lib/prisma";
+import EmbedPreview from "../../../../components/EmbedPreview";
 
-async function getServerSideProps(context) {
+export async function getServerSideProps(context) {
   const session = await getServerSession(context.req, context.res, authOptions);
   if (!session) return { redirect: { destination: "/", permanent: false } };
 
@@ -24,7 +25,7 @@ async function getServerSideProps(context) {
   return { props: { guildId, embeds: JSON.parse(JSON.stringify(embeds)) } };
 }
 
-function EmbedsListPage({ guildId, embeds: initialEmbeds }) {
+export default function EmbedsListPage({ guildId, embeds: initialEmbeds }) {
   const [embeds, setEmbeds] = useState(initialEmbeds);
   const [deletingId, setDeletingId] = useState(null);
 
@@ -92,6 +93,3 @@ function EmbedsListPage({ guildId, embeds: initialEmbeds }) {
     </main>
   );
 }
-
-module.exports = EmbedsListPage;
-module.exports.getServerSideProps = getServerSideProps;
